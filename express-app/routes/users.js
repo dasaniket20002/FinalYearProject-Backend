@@ -32,19 +32,20 @@ const SignUp = async (req, res) => {
 }
 
 const SignIn = async (req, res) => {
-    const { email = email.toLowerCase(), password } = req.body;
+    const { username, email, password } = req.body;
 
-    const user = await User.findOne({ email: email });
-    if (!user) return res.status(202).json({ msg: "User does not exist." });
+    const usernameF = await User.findOne({ username: username });
+    const emailF = await User.findOne({ email: email?.toLowerCase() });
+    if (!usernameF && !emailF) return res.status(202).json({ err: "User does not exist." });
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(202).json({ msg: "Invalid password" });
+    const isMatch = await bcrypt.compare(password, (usernameF || emailF).password);
+    if (!isMatch) return res.status(202).json({ err: "Invalid password" });
 
-    const userObject = user.toObject();
+    const userObject = (usernameF || emailF).toObject();
     delete userObject.password;
-    const token = jwt.sign(userObject, process.env.JWT_SECRET);
+    const token = jwt.sign(userObject, process.env.JWT_SECRET, { expiresIn: '3d' });
 
-    return res.status(200).json({ jwt: token });
+    return res.status(200).json({ msg: 'Login Successful', jwt: token });
 }
 
 router.post('/register', SignUp);
