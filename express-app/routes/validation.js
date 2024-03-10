@@ -3,11 +3,11 @@ var router = express.Router();
 
 var User = require('../schemas/UserModel');
 
-router.post('/username', async function (req, res) {
+router.post('/name', async function (req, res) {
     const { value } = req.body;
 
     if (value.length <= 0) return res.status(202).json({ err: 'Username is too short' });
-    if (await User.findOne({ username: value })) return res.status(202).json({ err: 'Username already exists' });
+    if (await User.findOne({ name: value })) return res.status(202).json({ err: 'Username already exists' });
 
     return res.status(200).json({ msg: 'ok' });
 });

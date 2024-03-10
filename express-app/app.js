@@ -7,7 +7,8 @@ require('dotenv').config()
 
 var indexRouter = require('./routes/index');
 var validationRouter = require('./routes/validation');
-var usersRouter = require('./routes/users')
+var usersRouter = require('./routes/users');
+var youtubeRouter = require('./routes/youtube');
 
 var app = express();
 app.use(require('cors')());
@@ -25,6 +26,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/validation', validationRouter);
 app.use('/users', usersRouter);
+app.use('/youtube', youtubeRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
