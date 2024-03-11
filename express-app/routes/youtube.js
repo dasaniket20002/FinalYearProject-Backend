@@ -30,7 +30,7 @@ router.get('/trending', async function (req, res) {
         return res.status(200).json(videoData);
     } catch (error) {
         console.error('Error fetching trending videos:', error);
-        return res.status(500).send('Error fetching trending videos');
+        return res.status(500).json({ msg: 'Error fetching trending videos', err: error });
     }
 });
 

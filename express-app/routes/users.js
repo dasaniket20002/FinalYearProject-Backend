@@ -80,9 +80,7 @@ const SignInWithoutPass = async (req, res) => {
 
     const userObject = (nameF || emailF).toObject();
     delete userObject.password;
-    console.log(userObject);
     const token = jwt.sign(userObject, process.env.JWT_SECRET, { expiresIn: '3d' });
-    console.log(token);
 
     return res.status(200).json({ msg: 'Login Successful', jwt: token });
 }
