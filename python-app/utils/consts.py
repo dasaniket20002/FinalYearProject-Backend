@@ -2,10 +2,12 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-MAX_YT_SEARCH_RESULTS = 5
+MAX_YT_SEARCH_RESULTS = 20
+BATCH_MAX_YT_SEARCH_RESULTS = 5
 
 CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
+API_KEY = os.getenv('API_KEY')
 PORT = os.getenv('PORT')
 
 API_NAME = 'youtube'

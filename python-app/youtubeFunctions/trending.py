@@ -42,4 +42,6 @@ def getPage(cache):
     params['chart'] = 'mostPopular'
     params['pageToken'] = request.args.get('page_token')
 
-    return getContent(cache, params)
+    headers = utilities.getDefaultHeaders()
+
+    return getContent(cache, params, headers)

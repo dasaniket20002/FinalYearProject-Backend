@@ -72,6 +72,10 @@ def getDefaultParams(params_type):
     else:
         params['regionCode'] = region_code
 
+    access_token = request.args.get('access_token')
+    if not access_token: 
+        params['key'] = consts.API_KEY
+
     return params
 
 def getDefaultHeaders():

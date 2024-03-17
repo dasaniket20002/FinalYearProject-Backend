@@ -25,13 +25,13 @@ def getPagedSearch():
 
 
 
-def getTagsRecommendation():
+def getRecommendationsByTags():
     return {}
 
 
-def getTopicsRecommendation():
+def getRecommendationByTopics():
     return {}
 
 
-def getChannelsRecommedation():
+def getRecommedationByChannels():
     return {}
