@@ -1,14 +1,17 @@
 from flask import Flask
+from flask_cors import CORS
 from routes import youtube
-import os
-from dotenv import load_dotenv
-load_dotenv()
+from utils import consts
 
 app = Flask(__name__)
-PORT = os.getenv('PORT')
+CORS(app)
 
 app.add_url_rule(rule='/', methods=['GET'], view_func=youtube.hello)
-app.add_url_rule(rule='/trending', methods=['GET'], view_func=youtube.getTrending)
+app.add_url_rule(rule='/youtube/trending', methods=['GET'], view_func=youtube.getTrending)
+app.add_url_rule(rule='/youtube/trending/page', methods=['GET'], view_func=youtube.getPagedTrending)
+app.add_url_rule(rule='/youtube/search', methods=['GET'], view_func=youtube.getSearch)
+app.add_url_rule(rule='/youtube/search/page', methods=['GET'], view_func=youtube.getPagedSearch)
 
 if __name__ == '__main__':
-    app.run(port=PORT)
+    app.run(port=consts.PORT)
+    

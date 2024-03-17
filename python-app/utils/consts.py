@@ -1,9 +1,19 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 MAX_YT_SEARCH_RESULTS = 5
+
+CLIENT_ID = os.getenv('CLIENT_ID')
+CLIENT_SECRET = os.getenv('CLIENT_SECRET')
+PORT = os.getenv('PORT')
 
 API_NAME = 'youtube'
 API_VERSION = 'v3'
-API_BASE_URL = 'https://youtube.googleapis.com/{API_NAME}/{YT_VERSION}'
+API_BASE_URL = f'https://youtube.googleapis.com/{API_NAME}/{API_VERSION}'
 
-VIDEOS_RULE = 'video'
+VIDEOS_RULE = 'videos'
+SEARCH_RULE = 'search'
 
-YT_VIDEO_LINK = '{API_BASE_URL}/{VIDEOS_RULE}'
+YT_VIDEO_LINK = f'{API_BASE_URL}/{VIDEOS_RULE}'
+YT_SEARCH_LINK = f'{API_BASE_URL}/{SEARCH_RULE}'

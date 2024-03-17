@@ -9,6 +9,7 @@ var indexRouter = require('./routes/index');
 var validationRouter = require('./routes/validation');
 var usersRouter = require('./routes/users');
 var youtubeRouter = require('./routes/youtube');
+var driveRouter = require('./routes/drive');
 
 var app = express();
 app.use(require('cors')());
@@ -27,6 +28,7 @@ app.use('/', indexRouter);
 app.use('/validation', validationRouter);
 app.use('/users', usersRouter);
 app.use('/youtube', youtubeRouter);
+app.use('/drive', driveRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

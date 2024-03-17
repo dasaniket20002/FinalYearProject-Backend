@@ -7,7 +7,6 @@ router.get('/trending', async function (req, res) {
         const regionCode = req.query.regionCode || 'IN'; // Get region code from query param (optional)
         const maxResults = req.query.maxResults || 10; // Get max results from query param (optional)
         const accessToken = req.query.accessToken;
-        const apiKey = process.env.YT_API_KEY;
 
         const url = new URL('https://youtube.googleapis.com/youtube/v3/videos');
         url.searchParams.set('part', 'snippet,contentDetails,id');
@@ -15,7 +14,6 @@ router.get('/trending', async function (req, res) {
         url.searchParams.set('region', regionCode);
         url.searchParams.set('maxResults', maxResults);
         if (accessToken) url.searchParams.set('access_token', accessToken);
-        else url.searchParams.set('key', apiKey);
 
         const response = await axios.get(url.toString());
 

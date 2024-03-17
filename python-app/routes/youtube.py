@@ -1,25 +1,37 @@
-from flask import request
-from urllib import parse as url
-from utils import consts
-import os
+from youtubeFunctions import search, trending
+from cachetools import TTLCache
 
+
+cache = TTLCache(maxsize=1000, ttl=600)
 
 def hello():
     return {'msg':'helloworld'}
 
-def getTrending():
-    API_KEY = os.getenv('')
-    params = {
-        'part' : ','.join(['snippet', 'contentDetails', 'id']),
-        'chart': 'mostPopular',
-        'maxResults': consts.MAX_YT_SEARCH_RESULTS,
-        'regionCode': request.args.get('region_code'),
-        'accessToken': request.args.get('access_token')
-    }
-    access_token = None | request.args.get('access_token')
-    if(access_token != None):
-        params['accessToken'] = request.args.get('access_token')
-        params['key'] = os.getenv('API_KEY')
 
-    link = consts.YT_VIDEO_LINK + '?' + url.urlencode(params)
-    return link
+# GET TRENDING VIDEOS LIST
+
+def getTrending():
+    return trending.getTrending(cache)
+def getPagedTrending():
+    return trending.getPage(cache)
+
+
+# GET SEARCHED VIDEOS LIST
+
+def getSearch():
+    return search.getSearch(cache)
+def getPagedSearch():
+    return search.getPage(cache)
+
+
+
+def getTagsRecommendation():
+    return {}
+
+
+def getTopicsRecommendation():
+    return {}
+
+
+def getChannelsRecommedation():
+    return {}
