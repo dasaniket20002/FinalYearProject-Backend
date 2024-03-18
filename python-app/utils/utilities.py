@@ -25,8 +25,8 @@ def construct_clean_structure(video):
             return_dict['channelTitle'] = video['snippet']['channelTitle']
 
         if 'thumbnails' in snippet_keys :
-            if 'default' in video['snippet']['thumbnails'].keys() :
-                return_dict['thumbnail'] = video['snippet']['thumbnails']['default']
+            if 'high' in video['snippet']['thumbnails'].keys() :
+                return_dict['thumbnail'] = video['snippet']['thumbnails']['high']
         if 'defaultLanguage' in snippet_keys :
             return_dict['defaultLanguage'] = video['snippet']['defaultLanguage']
         if 'defaultAudioLanguage' in snippet_keys :
