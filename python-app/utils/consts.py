@@ -16,6 +16,8 @@ API_BASE_URL = f'https://youtube.googleapis.com/{API_NAME}/{API_VERSION}'
 
 VIDEOS_RULE = 'videos'
 SEARCH_RULE = 'search'
+CHANNEL_RULE = 'channels'
 
 YT_VIDEO_LINK = f'{API_BASE_URL}/{VIDEOS_RULE}'
 YT_SEARCH_LINK = f'{API_BASE_URL}/{SEARCH_RULE}'
+YT_CHANNEL_LINK = f'{API_BASE_URL}/{CHANNEL_RULE}'

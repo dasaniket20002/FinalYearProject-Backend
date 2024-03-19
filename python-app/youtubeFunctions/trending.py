@@ -10,21 +10,31 @@ def getContent(cache, params, headers):
         return cache[link_to_get]
 
     response = requests.get(consts.YT_VIDEO_LINK, params=params, headers=headers)
-    responseObj = response.json()
+    responseObjVid = response.json()
     
     if response.status_code != 200:
-        return { 'err': responseObj['error'] }
+        return { 'err': responseObjVid['error'] }
     
-    cleaned_video_list = utilities.clean_videos_list(responseObj['items'])
+    channel_ids = ','.join([item['snippet']['channelId'] for item in responseObjVid['items']])
+    params = utilities.getDefaultParams()
+    params['id'] = channel_ids
+    response = requests.get(consts.YT_CHANNEL_LINK, params=params, headers=headers)
+    responseObjChnl = response.json()
+
+    if response.status_code != 200:
+        return { 'err': responseObjChnl['error'] }
+    
+    cleaned_video_list = utilities.clean_videos_list(responseObjVid['items'], responseObjChnl['items'])
     returnObj = {
         'video_list' : cleaned_video_list
     }
-    if 'kind' in responseObj.keys():
-        returnObj['kind'] = responseObj['kind']
-    if 'nextPageToken' in responseObj.keys():
-        returnObj['nextPageToken'] = responseObj['nextPageToken']
-    if 'prevPageToken' in responseObj.keys():
-        returnObj['prevPageToken'] = responseObj['prevPageToken']
+    if 'kind' in responseObjVid.keys():
+        returnObj['kind'] = responseObjVid['kind']
+    if 'nextPageToken' in responseObjVid.keys():
+        returnObj['nextPageToken'] = responseObjVid['nextPageToken']
+    if 'prevPageToken' in responseObjVid.keys():
+        returnObj['prevPageToken'] = responseObjVid['prevPageToken']
+
     cache[link_to_get] = returnObj
 
     return returnObj

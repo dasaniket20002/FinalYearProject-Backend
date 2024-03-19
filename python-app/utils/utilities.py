@@ -1,9 +1,10 @@
 from flask import request
 from urllib import parse as url
+
 from utils import consts
 
 
-def construct_clean_structure(video):
+def construct_clean_structure(video, channel):
     return_dict = {}
 
     videos_keys = video.keys()
@@ -15,6 +16,9 @@ def construct_clean_structure(video):
     
     if 'snippet' in videos_keys:
         snippet_keys = video['snippet'].keys()
+
+        if 'publishedAt' in snippet_keys:
+            return_dict['publishedAt'] = video['snippet']['publishedAt']
 
         if 'title' in snippet_keys :
             return_dict['title'] = video['snippet']['title']
@@ -49,16 +53,22 @@ def construct_clean_structure(video):
     if 'pageInfo' in videos_keys:
         return_dict['pageInfo'] = video['pageInfo']
 
+    if 'snippet' in channel.keys():
+        if 'thumbnails' in channel['snippet'].keys():
+            return_dict['channelThumbnail'] = channel['snippet']['thumbnails']['default']
+
     return return_dict
 
-def clean_videos_list(video_list):
-    return [construct_clean_structure(video) for video in video_list]
+def clean_videos_list(video_list, channel_list):
+    return [construct_clean_structure(video, channel) for (video, channel) in zip(video_list, channel_list)]
 
-def getDefaultParams(params_type):
+def getDefaultParams(params_type=None):
     if params_type == 'videos':
         parts = ['snippet', 'contentDetails', 'id', 'topicDetails']
     elif params_type == 'search':
-        parts = ['id']
+        parts = ['id', 'snippet']
+    else:
+        parts = ['id', 'snippet']
 
     params = {
         'part' : ','.join(parts),

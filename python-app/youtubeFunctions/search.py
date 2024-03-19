@@ -7,30 +7,30 @@ import requests
 def getContent(cache, params, headers):
     link_to_get = consts.YT_SEARCH_LINK + '?' + url.urlencode(params)
     if link_to_get in cache:
-        searchResponseObj = cache[link_to_get]
-    else:
-        response = requests.get(consts.YT_SEARCH_LINK, params=params, headers=headers)
-        searchResponseObj = response.json()
+        return cache[link_to_get]
+    
+    response = requests.get(consts.YT_SEARCH_LINK, params=params, headers=headers)
+    searchResponseObj = response.json()
         
-        if response.status_code != 200:
-            return { 'err': searchResponseObj['error'] }
-        
-        cache[link_to_get] = searchResponseObj
+    if response.status_code != 200:
+        return { 'err': searchResponseObj['error'] }
     
     params = utilities.getDefaultParams('videos')
-    params['id'] = ','.join([video['id']['videoId'] for video in searchResponseObj['items']])
-
-    link_to_get = consts.YT_VIDEO_LINK + '?' + url.urlencode(params)
-    if link_to_get in cache:
-        return cache[link_to_get]
+    params['id'] = ','.join([video['id']['videoId'] for video in searchResponseObj['items'] if video['id']['kind'] == 'youtube#video'])
 
     response = requests.get(consts.YT_VIDEO_LINK, params=params, headers=headers)
     videosResponseObj = response.json()
 
     if response.status_code != 200:
             return { 'err': videosResponseObj['error'] }
+    
+    params = utilities.getDefaultParams()
+    params['id'] = ','.join([video['snippet']['channelId'] for video in searchResponseObj['items'] if video['id']['kind'] == 'youtube#video'])
+    
+    response = requests.get(consts.YT_CHANNEL_LINK, params=params, headers=headers)
+    channelsResponseObj = response.json()
 
-    cleaned_video_list = utilities.clean_videos_list(videosResponseObj['items'])
+    cleaned_video_list = utilities.clean_videos_list(videosResponseObj['items'], channelsResponseObj['items'])
     returnObj = {
         'video_list' : cleaned_video_list
     }
@@ -40,6 +40,7 @@ def getContent(cache, params, headers):
         returnObj['nextPageToken'] = searchResponseObj['nextPageToken']
     if 'prevPageToken' in searchResponseObj.keys():
         returnObj['prevPageToken'] = searchResponseObj['prevPageToken']
+
     cache[link_to_get] = returnObj
 
     return returnObj 
