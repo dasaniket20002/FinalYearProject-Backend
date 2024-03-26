@@ -6,7 +6,6 @@ from utils import consts
 app = Flask(__name__)
 CORS(app)
 
-app.add_url_rule(rule='/', methods=['GET'], view_func=youtube.hello)
 app.add_url_rule(rule='/youtube/trending', methods=['GET'], view_func=youtube.getTrending)
 app.add_url_rule(rule='/youtube/trending/page', methods=['GET'], view_func=youtube.getPagedTrending)
 app.add_url_rule(rule='/youtube/search', methods=['GET'], view_func=youtube.getSearch)

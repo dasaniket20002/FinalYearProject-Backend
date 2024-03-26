@@ -4,10 +4,6 @@ from cachetools import TTLCache
 
 cache = TTLCache(maxsize=1000, ttl=600)
 
-def hello():
-    return {'msg':'helloworld'}
-
-
 # GET TRENDING VIDEOS LIST
 
 def getTrending():
