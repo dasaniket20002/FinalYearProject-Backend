@@ -1,4 +1,4 @@
-from youtubeFunctions import search, trending
+from youtubeFunctions import search, trending, recommendation_system
 from cachetools import TTLCache
 
 
@@ -19,6 +19,9 @@ def getSearch():
 def getPagedSearch():
     return search.getPage(cache)
 
+
+def getAllRecommendations():
+    return recommendation_system.get_recommendations()
 
 
 def getRecommendationsByTags():

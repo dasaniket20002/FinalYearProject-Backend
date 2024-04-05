@@ -1,9 +1,8 @@
 from flask import request
-from urllib import parse as url
 
 from utils import consts
 
-
+''''''
 def construct_clean_structure(video, channel):
     return_dict = {}
 
@@ -66,6 +65,8 @@ def clean_videos_list(video_list, channel_list):
     video_channel_list = [(video, channel) for video in video_list for channel in channel_list if video['snippet']['channelId'] == channel['id']]
     return [construct_clean_structure(video, channel) for (video, channel) in video_channel_list]
 
+
+''''''
 def getDefaultParams(params_type=None):
     if params_type == 'videos':
         parts = ['snippet', 'contentDetails', 'id', 'topicDetails']
@@ -77,6 +78,7 @@ def getDefaultParams(params_type=None):
         parts = ['id', 'snippet']
 
     params = {
+        'type': 'video',
         'part' : ','.join(parts),
         'maxResults': consts.MAX_YT_SEARCH_RESULTS
     }
@@ -94,6 +96,8 @@ def getDefaultParams(params_type=None):
 
     return params
 
+
+''''''
 def getDefaultHeaders():
     access_token = request.args.get('access_token')
     token_type = request.args.get('token_type')
@@ -102,3 +106,38 @@ def getDefaultHeaders():
         'Authorization': f'{token_type} {access_token}'
     }
     return header
+
+
+''''''
+def prepare_params_for_search_request(order, channel_id=None, search_query=None): # order : viewCount | date
+    params = getDefaultParams('search')
+    if(channel_id != None):
+        params['channelId'] = channel_id
+    if(search_query != None):
+        params['q'] = search_query
+
+    params['order'] = order
+    return params
+
+    # url_str = url.urlunparse(consts.YT_SEARCH_LINK, params=url.urlencode(params))
+    # return url_str
+
+
+''''''
+def prepare_params_for_video_request(video_ids): 
+    params = getDefaultParams('videos')
+    params['id'] = ','.join(video_ids)
+    return params
+
+    # url_str = url.urlunparse(consts.YT_VIDEO_LINK, params=url.urlencode(params))
+    # return url_str
+
+
+''''''
+def prepare_params_for_channel_request(video_ids): 
+    params = getDefaultParams()
+    params['id'] = ','.join(video_ids)
+    return params
+
+    # url_str = url.urlunparse(consts.YT_CHANNEL_LINK, params=url.urlencode(params))
+    # return url_str

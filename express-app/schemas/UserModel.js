@@ -1,18 +1,22 @@
 var mongoose = require('mongoose');
 
 var UserSchema = new mongoose.Schema({
-    name: {
+    sub: {
         type: String,
         required: true
     },
-    email: {
-        type: String,
-        required: true
+    channels: {
+        type: [String],
+        default: [],
     },
-    password: {
-        type: String,
-        required: true
-    }
+    tags: {
+        type: [String],
+        default: [],
+    },
+    topics: {
+        type: [String],
+        default: [],
+    },
 });
 
 var User = new mongoose.model('User', UserSchema);
