@@ -23,18 +23,25 @@ router.post('/update', async (req, res) => {
         const user = await User.findOne({ sub: sub });
         if (!user)
             return res.status(400).send('user doesnt exist');
-
-        user.channels = [...user.channels, channel];
-        if (user.channels.length > 10000) user.channels.length = 10000;
-        user.tags = [...user.tags, ...tags];
-        if (user.tags.length > 10000) user.tags.length = 10000;
-        user.topics = [...user.topics, ...topics];
-        if (user.topics.length > 10000) user.topics.length = 10000;
-
+        if(channel) {
+            user.channels = [...user.channels, channel];
+            if (user.channels.length > 10000) user.channels.length = 10000;
+        }
+        if(tags) {
+            user.tags = [...user.tags, ...tags];
+            if (user.tags.length > 10000) user.tags.length = 10000;
+        }
+        if(topics) {
+            user.topics = [...user.topics, ...topics];
+            if (user.topics.length > 10000) user.topics.length = 10000;
+        }
         await user.save();
 
         return res.status(200);
-    } catch (err) { return res.status(500).json(error); }
+    } catch (err) { 
+        console.log(err);
+        return res.status(500).json(err); 
+        }
 });
 
 module.exports = router;
