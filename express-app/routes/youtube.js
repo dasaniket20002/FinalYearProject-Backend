@@ -1,6 +1,15 @@
-var express = require('express');
-var router = express.Router();
-var axios = require('axios');
+const express = require('express');
+const router = express.Router();
+const axios = require('axios');
+const User = require('../schemas/UserModel');
+
+const fs = require('fs');
+const path = require("path");
+const { spawnSync } = require('child_process');
+const { readFile } = require('fs/promises');
+const { appendFile } = require('fs/promises');
+const { join } = require('path');
+
 
 router.get('/trending', async function (req, res) {
     try {
@@ -284,9 +293,59 @@ router.get('/search/page', async function (req, res) {
 
         return res.status(200).json({ video_list: videoData, kind: searchResponse.data.kind, nextPageToken: searchResponse.data.nextPageToken, prevPageToken: searchResponse.data.prevPageToken });
     } catch (error) {
-        // console.error(error);
         return res.status(500).json({ msg: 'Error fetching trending videos', err: error });
     }
 });
+
+router.get('/getRecommendations', async (req, res) => {
+    try {
+        const sub = req.query.sub;
+        const regionCode = req.query.regionCode || 'IN'; // Get region code from query param (optional)
+        const maxResults = req.query.maxResults || 2; // Get max results from query param (optional)
+        const accessToken = req.query.accessToken;
+        const tokenType = req.query.tokenType;
+        const debug = req.query.debug || false;
+
+        const user = await User.findOne({ sub: sub });
+        if (!user)
+            return res.status(202).json({ err: 'User has no recommendations' });
+
+        await appendFile(
+            join(`../express-app/python/cache_temp/${sub}_args.json`),
+            JSON.stringify({ watched_tags: user.tags, access_token: accessToken, token_type: tokenType, region_code: regionCode, max_results: maxResults }),
+            {
+                encoding: 'utf-8',
+                flag: 'w',
+                indent: 4,
+            },
+        );
+
+        if (!debug) {
+            const pythonProcess = await spawnSync('C:/Python312/python.exe', [
+                './python/recommendationSystem.py',
+                path.resolve(`../express-app/python/cache_temp/${sub}_args.json`),
+                path.resolve(`../express-app/python/cache_temp/${sub}_result.json`)
+            ]);
+            const result = pythonProcess.stdout?.toString()?.trim();
+            const error = pythonProcess.stderr?.toString()?.trim();
+
+            const status = result === 'OK';
+            if (status) {
+                const buffer = await readFile(`../express-app/python/cache_temp/${sub}_result.json`);
+                return res.status(200).json(JSON.parse(buffer.toString()));
+            } else {
+                console.log(error);
+                return res.status(500).json({ err: error });
+            }
+        }
+
+        const buffer = await readFile(`../express-app/python/cache_temp/${sub}_result.json`);
+        return res.status(200).json(JSON.parse(buffer.toString()));
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ err: err });
+    }
+})
 
 module.exports = router;
