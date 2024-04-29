@@ -135,21 +135,18 @@ def prepare_params_for_channel_request(access_token, channel_ids, max_results=10
 '''
 
 
-def get_recommendations(access_token, token_type, watched_tags, max_results, region_code):
+def get_recommendations(access_token, token_type, watched_tags, watched_topics, max_results, region_code):
     result = {}
-    inp_data = {'access_token': access_token, 'token_type': token_type, 'watched_tags': watched_tags, 'max_results': max_results, 'region_code': region_code}
+    inp_data = {'access_token': access_token, 'token_type': token_type, 'watched_tags': watched_tags, 'watched_topics': watched_topics, 'max_results': max_results, 'region_code': region_code}
 
-    # channel_thread = threading.Thread(name='channel_thread', target=get_recommendation_by_channel_ids, args=(watched_channel_ids, result, ))
     tags_thread = threading.Thread(name='tags_thread', target=get_recommendation_by_tags, args=(inp_data, result, ))
-    # topics_thread = threading.Thread(name='topics_thread', target=get_recommendation_by_topics, args=(watched_topics, result, ))
+    topics_thread = threading.Thread(name='topics_thread', target=get_recommendation_by_topics, args=(inp_data, result, ))
 
-    # channel_thread.start()
     tags_thread.start()
-    # topics_thread.start()
+    topics_thread.start()
 
-    # channel_thread.join()
     tags_thread.join()
-    # topics_thread.join()
+    topics_thread.join()
 
     # try:
     #     print(str(result))
@@ -159,12 +156,13 @@ def get_recommendations(access_token, token_type, watched_tags, max_results, reg
     video_list = []
     if(result['TAGS_RES'] != None):
         video_list = video_list + result['TAGS_RES']['video_list']
+    if(result['TOPICS_RES'] != None):
+        video_list = video_list + result['TOPICS_RES']['video_list']
 
     return {
             'kind': 'api#recommendations',
-            # 'videos_by_channel_id' : result['CHANNELS_RES'],
             'videos_by_top_tags' : result['TAGS_RES'],
-            # 'videos_by_top_topics' : result['TOPICS_RES']
+            'videos_by_top_topics' : result['TOPICS_RES'],
             'video_list': video_list
             }
 
@@ -174,6 +172,7 @@ import pandas as pd
 import grequests
 
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
 
 YT_SEARCH_LINK = 'https://youtube.googleapis.com/youtube/v3/search'
 YT_VIDEOS_LINK = 'https://youtube.googleapis.com/youtube/v3/videos'
@@ -206,11 +205,6 @@ def get_recommendation_by_tags(inp_data, result_dict=None) :
     params_for_videos_to_search_by_top_tags = [prepare_params_for_search_request(access_token, 'date' if np.random.rand() > 0.75 else 'viewCount', max_results, region_code, search_query=single_tag) for single_tag in reduced_sorted_tags.index]
     search_results = grequests.map(grequests.get(YT_SEARCH_LINK, params=params, headers=default_header) for params in params_for_videos_to_search_by_top_tags)
 
-    # try:
-    #     print([response.json() for response in search_results])
-    # except:
-    #     print('pass')
-
     if ['error'] in [list(response.json().keys()) for response in search_results]:
         if result_dict is not None:
             result_dict['TAGS_RES'] = None
@@ -225,15 +219,6 @@ def get_recommendation_by_tags(inp_data, result_dict=None) :
         grequests.get(YT_CHANNEL_LINK, params=prepare_params_for_channel_request(access_token, channel_ids, max_results, region_code), headers=default_header)]
                 )
 
-    # try:
-    #     print(video_search_results[0].json())
-    # except:
-    #     print('pass')
-    # try:
-    #     print(video_search_results[1].json())
-    # except:
-    #     print('pass')
-
     curated_video_list = clean_videos_list(video_search_results[0].json()['items'], video_search_results[1].json()['items'])
 
     return_obj = {
@@ -243,6 +228,58 @@ def get_recommendation_by_tags(inp_data, result_dict=None) :
 
     if result_dict is not None:
         result_dict['TAGS_RES'] = return_obj
+    return return_obj
+
+def get_recommendation_by_topics(inp_data, result_dict=None) :
+
+    access_token = inp_data['access_token']
+    token_type = inp_data['token_type']
+    watched_topics = inp_data['watched_topics']
+    max_results = inp_data['max_results']
+    region_code = inp_data['region_code']
+
+    if len(watched_topics) == 0 :
+        if result_dict is not None:
+            result_dict['TOPICS_RES'] = None
+        return None
+
+    vectorizer = TfidfVectorizer(max_features=250, stop_words='english')
+
+    vectorized_tags = vectorizer.fit_transform(watched_topics)
+    vectorized_tags_DF = pd.DataFrame(vectorized_tags.toarray(), index=watched_topics, columns=vectorizer.get_feature_names_out())
+    vectorized_tags_DF.loc[len(vectorized_tags_DF.index)] = abs(vectorized_tags_DF.sum() - 1)
+
+    sorted_tags = (vectorized_tags_DF.iloc[-1].sort_values(ascending=False))
+    reduced_sorted_tags = sorted_tags[0: 10 if len(sorted_tags) > 10 else len(sorted_tags)]
+
+    default_header = getDefaultHeaders(access_token, token_type)
+
+    params_for_videos_to_search_by_top_tags = [prepare_params_for_search_request(access_token, 'date' if np.random.rand() > 0.75 else 'viewCount', max_results, region_code, search_query=single_tag) for single_tag in reduced_sorted_tags.index]
+    search_results = grequests.map(grequests.get(YT_SEARCH_LINK, params=params, headers=default_header) for params in params_for_videos_to_search_by_top_tags)
+
+    if ['error'] in [list(response.json().keys()) for response in search_results]:
+        if result_dict is not None:
+            result_dict['TOPICS_RES'] = None
+        return None
+    
+    items_in_search_response = [x for xs in [response.json()['items'] for response in search_results] for x in xs]
+    video_ids = [item['videoId'] for item in [item['id'] for item in items_in_search_response]]
+    channel_ids = [item['channelId'] for item in [item['snippet'] for item in items_in_search_response]]
+
+    video_search_results = grequests.map(
+        [grequests.get(YT_VIDEOS_LINK, params=prepare_params_for_video_request(access_token, video_ids, max_results, region_code), headers=default_header),
+        grequests.get(YT_CHANNEL_LINK, params=prepare_params_for_channel_request(access_token, channel_ids, max_results, region_code), headers=default_header)]
+                )
+
+    curated_video_list = clean_videos_list(video_search_results[0].json()['items'], video_search_results[1].json()['items'])
+
+    return_obj = {
+        'kind': 'TOPICS_RES',
+        'video_list': curated_video_list
+    }
+
+    if result_dict is not None:
+        result_dict['TOPICS_RES'] = return_obj
     return return_obj
 
 '''
@@ -261,11 +298,12 @@ args = json.load(json_str)
 access_token = args['access_token']
 token_type = args['token_type']
 watched_tags = args['watched_tags']
+watched_topics = args['watched_topics']
 max_results = args['max_results']
 region_code = args['region_code']
 
 
-result = get_recommendations(access_token, token_type, watched_tags, max_results, region_code)
+result = get_recommendations(access_token, token_type, watched_tags, watched_topics, max_results, region_code)
 # print(str(result))
 
 with open(result_path, "w") as outfile:

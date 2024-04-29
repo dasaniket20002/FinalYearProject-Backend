@@ -301,7 +301,7 @@ router.get('/getRecommendations', async (req, res) => {
     try {
         const sub = req.query.sub;
         const regionCode = req.query.regionCode || 'IN'; // Get region code from query param (optional)
-        const maxResults = req.query.maxResults || 2; // Get max results from query param (optional)
+        const maxResults = req.query.maxResults || 5; // Get max results from query param (optional)
         const accessToken = req.query.accessToken;
         const tokenType = req.query.tokenType;
         const debug = req.query.debug || false;
@@ -310,17 +310,17 @@ router.get('/getRecommendations', async (req, res) => {
         if (!user)
             return res.status(202).json({ err: 'User has no recommendations' });
 
-        await appendFile(
-            join(`../express-app/python/cache_temp/${sub}_args.json`),
-            JSON.stringify({ watched_tags: user.tags, access_token: accessToken, token_type: tokenType, region_code: regionCode, max_results: maxResults }),
-            {
-                encoding: 'utf-8',
-                flag: 'w',
-                indent: 4,
-            },
-        );
-
         if (!debug) {
+            await appendFile(
+                join(`../express-app/python/cache_temp/${sub}_args.json`),
+                JSON.stringify({ watched_tags: user.tags, watched_topics: user.topics, access_token: accessToken, token_type: tokenType, region_code: regionCode, max_results: maxResults }),
+                {
+                    encoding: 'utf-8',
+                    flag: 'w',
+                    indent: 4,
+                },
+            );
+
             const pythonProcess = await spawnSync('C:/Python312/python.exe', [
                 './python/recommendationSystem.py',
                 path.resolve(`../express-app/python/cache_temp/${sub}_args.json`),
