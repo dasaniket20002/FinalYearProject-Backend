@@ -311,15 +311,23 @@ router.get('/getRecommendations', async (req, res) => {
             return res.status(202).json({ err: 'User has no recommendations' });
 
         if (!debug) {
+
+            const json = JSON.stringify({ watched_tags: user.tags, watched_topics: user.topics, access_token: accessToken, token_type: tokenType, region_code: regionCode, max_results: maxResults });
+            const json_enc = json.replace(/[\u007F-\uFFFF]/g, function (chr) {
+                return "\\u" + ("0000" + chr.charCodeAt(0).toString(16)).substring(-4)
+            });
+
             await appendFile(
                 join(`../express-app/python/cache_temp/${sub}_args.json`),
-                JSON.stringify({ watched_tags: user.tags, watched_topics: user.topics, access_token: accessToken, token_type: tokenType, region_code: regionCode, max_results: maxResults }),
+                json_enc,
                 {
-                    encoding: 'utf-8',
+                    // encoding: 'utf-8',
                     flag: 'w',
                     indent: 4,
                 },
             );
+
+            // fs.writeFile(`../express-app/python/cache_temp/${sub}_args.json`, JSON.stringify({ watched_tags: user.tags, watched_topics: user.topics, access_token: accessToken, token_type: tokenType, region_code: regionCode, max_results: maxResults }, null, 4));
 
             const pythonProcess = await spawnSync('C:/Python312/python.exe', [
                 './python/recommendationSystem.py',
