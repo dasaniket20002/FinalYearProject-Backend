@@ -8,6 +8,7 @@ var app = require('../app');
 var debug = require('debug')('express-app:server');
 var http = require('http');
 var mongoose = require('mongoose')
+const socketIO = require('socket.io');
 
 /**
  * Get port from environment and store in Express.
@@ -21,6 +22,11 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
+const io = socketIO(server, {
+    cors: {
+        origin: "http://localhost:3000"
+    }
+});
 
 /**
  * Connect to MongoDB 
@@ -31,6 +37,8 @@ mongoose.connect(mongodb_cs)
     .then(
         () => {
             console.log('Connection Successful to MongoDB');
+
+            io.on('connection', onIOConnection);
 
             /**
              * Listen on provided port, on all network interfaces.
@@ -101,4 +109,54 @@ function onListening() {
         ? 'pipe ' + addr
         : 'port ' + addr.port;
     debug('Listening on ' + bind);
+}
+
+/**
+ * Socket Connection
+ */
+
+const rooms = {};
+
+function onIOConnection(socket) {
+
+    socket.on('create', (room, videoElement) => {
+        socket.join(room);
+        if (!rooms[room]) {
+            rooms[room] = videoElement;
+        }
+        io.to(room).emit('initialState', rooms[room]);
+    });
+
+    socket.on('join', (room) => {
+        socket.join(room);
+        io.to(room).emit('joined', rooms[room]);
+    });
+
+    socket.on('play', (room) => {
+        io.to(room).emit('play');
+    });
+
+    socket.on('pause', (room) => {
+        io.to(room).emit('pause');
+    });
+
+    socket.on('timeline', (room, time) => {
+        if (rooms[room])
+            rooms[room].time = time;
+    });
+
+    socket.on('getLiveTime', (room) => {
+        if (rooms[room])
+            io.to(room).emit('liveTime', rooms[room].time);
+    })
+
+    // socket.on('disconnect', () => {
+    //     console.log('A user disconnected');
+    // });
+
+    socket.on('chat broadcast', (room, username, message) => {
+        if (rooms[room])
+            io.to(room).emit('chat recieve', { username, message });
+    });
+
 }
